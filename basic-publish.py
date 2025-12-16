@@ -26,36 +26,12 @@ def connect_wifi():
             print('.', end='')
     print('\nWi-Fi Connected:', wlan.ifconfig())
     
-def sub_cb(topic, msg):
-    """Callback function that runs when a message is received"""
-    print((topic, msg))
-    command = msg.decode('utf-8')
-    
-    if command == "test":
-        print("receive MQTT message")
-        led.toggle()
-
-    if command == "LED1": led1.toggle()
-    if command == "LED2": led2.toggle()
-    
-    if command == "BOTH":
-        led1.toggle()
-        led2.toggle()
-        
-    if command == "shutdown":
-        led1.value(0)
-        led2.value(0)
-    return 0
-    
 
 def connect_mqtt(MQTT_CLIENT_ID, MQTT_BROKER, MQTT_TOPIC):
     try:
         client = MQTTClient(MQTT_CLIENT_ID, MQTT_BROKER)
         client.connect()
-        client.set_callback(sub_cb)
-        client.subscribe(MQTT_TOPIC)
         print(f"Connected to MQTT Broker: {MQTT_BROKER}")
-        print(f"Subscribed to Topic: {MQTT_TOPIC}")
         return client
     except Exception as e:
         print(f"Failed to connect to MQTT: {e}")
@@ -63,14 +39,17 @@ def connect_mqtt(MQTT_CLIENT_ID, MQTT_BROKER, MQTT_TOPIC):
 
 
 # --- MAIN EXECUTION ---
-led_test.value(0)
+
 connect_wifi()
 client = connect_mqtt(MQTT_CLIENT_ID, MQTT_BROKER, MQTT_TOPIC)
 
 if client:
     led_test.value(1)
-    while True:            
-        client.check_msg()
-        time.sleep(0.1) 
+    while True:
+        client.publish(MQTT_TOPIC, "Hello from ESP32")        
+        time.sleep(1)
+
 else:
     print("Could not start MQTT client.")
+
+
